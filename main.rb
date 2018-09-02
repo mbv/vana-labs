@@ -3,10 +3,16 @@
 require 'net/imap'
 require 'mail'
 require 'json'
-require 'git'
+require 'rugged'
 require 'securerandom'
+require 'nokogiri'
+require 'mongo'
 
 class EmailChecker
+  def initialize(mongo_publisher)
+    @mongo_publisher = mongo_publisher
+  end
+
   def start_check
     config = YAML.safe_load(File.read('mail_receiver.yml'))
                  .each_with_object({}) { |(k, v), memo| memo[k.to_sym] = v; }
@@ -20,33 +26,24 @@ class EmailChecker
 
         imap.select('Inbox')
 
-
         imap.uid_search(%w[NOT DELETED]).each do |uid|
-
           source = imap.uid_fetch(uid, ['RFC822']).first.attr['RFC822']
 
-
-          EmailMessage.receive(source)
-
+          result = EmailMessage.receive(source)
+          @mongo_publisher.save(result[:body]) if result[:status] == :ok
 
           imap.uid_store(uid, '+FLAGS', [:Deleted])
         end
 
-
         imap.expunge
         imap.logout
         imap.disconnect
-
-
       rescue Net::IMAP::NoResponseError => e
         puts "No Response Error: #{e}"
-
       rescue Net::IMAP::ByeResponseError => e
         puts "Bye Response Error: #{e}"
-
       rescue StandardError => e
         puts "Fatal Error: #{e}"
-
       end
 
       sleep(sleep_time)
@@ -56,55 +53,107 @@ end
 
 class EmailMessage
   def self.receive(source)
-    regexp_subject = /\[СПП\]\s*:\s+([а-яА-ЯёЁ0-9 ]+)\s*-\s*ЛР\s*(\d+)/m
-    regexp_git_links = /((?:git|ssh|https?|git@[-\w.]+):(\/\/)?(.*?)(\.git)(\/?|\#[-\d\w._]+?))/m
+    regexp_subject   = /\[СПП\]\s*:\s+([а-яА-ЯёЁ0-9. ]+)\s*-\s*ЛР\s*(\d+)/m
+    regexp_git_links = /((https?|git@)(:\/\/)?([\w_@:-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:\/~+#-]*[\w@?^=%&\/~+#-])?)/i
+
 
     message = Mail.read_from_string source
-    if matches = regexp_subject.match(message.subject)
-      full_name = matches[1]
+    if (matches = regexp_subject.match(message.subject))
+      full_name  = matches[1]
       lab_number = matches[2]
 
-
       git_links = []
-      message.body.decoded.scan(regexp_git_links) do |match|
-        git_links << match[0]
+
+      parts = []
+      if message.body.parts.count.positive?
+        parts = message.body.parts.map(&:decoded)
+      else
+        parts << message.body.decoded
+      end
+
+      parts.each do |part|
+        Nokogiri::HTML(part).text.scan(regexp_git_links) do |match|
+          git_links << match[0]
+        end
       end
 
       git_links.uniq!
 
-      git_links.each do |link|
+      git_results = git_links.map do |link|
         GitCheck.new.check(link)
       end
 
-      print({
-                full_name: full_name,
-                lab_number: lab_number,
-                message: message.body.decoded,
-                git_links: git_links
-            })
+      return {
+          status: :ok,
+          body:   {
+              full_name:     full_name,
+              lab_number:    lab_number,
+              message_parts: parts,
+              git_results:   git_results,
+              processed:     Time.now,
+              date:          message.date
+
+          }
+      }
 
     end
 
-    #print(message)
+    {
+        status: :error
+    }
   end
 end
 
 class GitCheck
   def check(url)
     name = SecureRandom.hex(10)
-    g = Git.clone(url, name, :path => '/tmp/checkout')
-    print g.log
-    print "\n"
-    print g.branches[:master].gcommit
-    print "\n"
-    commit = g.branches[:master].gcommit
+    Dir.mkdir('/tmp/checkout') unless File.exist?(File.join('/tmp', 'checkout'))
+    begin
+      repo = Rugged::Repository.clone_at(url, File.join('/tmp', 'checkout', name), depth: 1)
+    rescue Rugged::NetworkError => e
+      puts e
+      return {
+          status: :error_clone,
+          url:    url
+      }
+    rescue Rugged::SshError => e
+      puts e
+      return {
+          status: :not_access,
+          url:    url
+      }
+    end
+
+
+    unless repo.branches.exist? 'master'
+      return {
+          status: :not_master_branch,
+          url:    url
+      }
+    end
+
+
     {
-        name: commit.name,
-        date: commit.date,
-        hash: commit.sha,
-        message: commit.message
+        status:  :ok,
+        url:     url,
+        hash:    repo.branches['master'].target_id,
+        time:    repo.branches['master'].target.time,
+        message: repo.branches['master'].target.message
     }
   end
 end
 
-EmailChecker.new.start_check
+class MongoPublisher
+  def initialize
+    @client = Mongo::Client.new(['127.0.0.1:27017'], database: 'vana-labs')
+  end
+
+  def save(message)
+    collection = @client[:labs]
+
+    collection.insert_one(message)
+  end
+
+end
+
+EmailChecker.new(MongoPublisher.new).start_check

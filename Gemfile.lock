@@ -1,17 +1,29 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    git (1.5.0)
+    bson (4.3.0)
     mail (2.7.0)
       mini_mime (>= 0.1.1)
     mini_mime (1.0.1)
+    mini_portile2 (2.3.0)
+    mongo (2.6.2)
+      bson (>= 4.3.0, < 5.0.0)
+    nokogiri (1.8.4)
+      mini_portile2 (~> 2.3.0)
+    rugged (0.27.4)
+    thread_safe (0.3.6)
+    tzinfo (1.2.5)
+      thread_safe (~> 0.1)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  git!
   mail!
+  mongo!
+  nokogiri!
+  rugged!
+  tzinfo!
 
 BUNDLED WITH
    1.16.2
