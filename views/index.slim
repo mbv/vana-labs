@@ -1,0 +1,57 @@
+table.table
+  thead.thead-dark
+    tr
+      th scope="col"  #
+      th scope="col"  Name
+      th scope="col"  Number
+      th scope="col"  Date
+      th scope="col"  Message
+      th scope="col"  Git
+  tbody
+    - @labs.each do |lab|
+      tr
+        th scope="row"
+        td= lab[:full_name]
+        td= lab[:lab_number]
+        td
+          .container
+            .row
+              .col-12.font-weight-bold
+                | processed:
+              .col-12= lab[:processed].strftime("%d.%m.%Y %H:%M:%S")
+            .row
+              .col-12.font-weight-bold
+                | received:
+              .col-12= lab[:date].strftime("%d.%m.%Y %H:%M:%S")
+        td
+          - lab[:message_parts].each do |m|
+            .card.mb-3
+              .card-body== message(m)
+            hr
+        td
+          - lab[:git_results].each do |r|
+            .card.text-white.bg-primary.mb-3
+              .card-header
+                h5.card-title= r[:status]
+              .card-body
+                .container
+                  .row
+                    .col-4.text-right.font-weight-bold
+                      | url:
+                    .col-8= r[:url]
+                  - if r[:status] == :ok
+                    hr
+                    .row
+                      .col-4.text-right.font-weight-bold
+                        | hash:
+                      .col-8= r[:hash]
+                    hr
+                    .row
+                      .col-4.text-right.font-weight-bold
+                        | time:
+                      .col-8= Time.at(r[:time]).strftime("%d.%m.%Y %H:%M:%S")
+                    hr
+                    .row
+                      .col-4.text-right.font-weight-bold
+                        | message:
+                      .col-8= r[:message]
