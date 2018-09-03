@@ -1,0 +1,8 @@
+[submodule "app/src"]
+	path = app/src
+	url = https://github.com/mbv/vana-labs.git
+	branch = master
+[submodule "web/src"]
+	path = web/src
+	url = https://github.com/mbv/vana-labs.git
+	branch = web

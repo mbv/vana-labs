@@ -1,0 +1,35 @@
+version: '3'
+services:
+    labs-app:
+        build: ./app
+        container_name: "labs-app"
+        volumes:
+            - ./app/src:/usr/src/app:rw
+            - ./config:/usr/src/config
+        links:
+            - mongodb
+        depends_on:
+            - mongodb
+    labs-web:
+        build: ./web
+        container_name: "labs-web"
+        volumes:
+            - ./web/src:/usr/src/app:rw
+            - ./config:/usr/src/config
+        ports:
+            - 8880:80
+        links:
+            - mongodb
+        depends_on:
+            - mongodb        
+    mongodb:
+        image: mongo:latest
+        container_name: "mongodb"
+        environment:
+          - MONGO_DATA_DIR=/data/db
+          - MONGO_LOG_DIR=/dev/null
+        volumes:
+          - ./data/db:/data/db
+        ports:
+            - 27017:27017
+        command: mongod --smallfiles --logpath=/dev/null # --quiet
