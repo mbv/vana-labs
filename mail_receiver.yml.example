@@ -1,5 +1,0 @@
-host: "imap.email.com"
-port: 993
-username: "email@email.com"
-password: "password"
-sleep_time: 10
