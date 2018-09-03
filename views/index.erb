@@ -1,33 +1,175 @@
-<table class="table" id="labs-list">
-  <thead class="thead-dark">
-  <tr>
-    <th scope="col"> #</th>
-    <th scope="col"> Name</th>
-    <th scope="col"> Number</th>
-    <th scope="col"> Date</th>
-  </tr>
-  </thead>
-  <tbody>
-  <tr v-for="item in items">
-    <td>
-    </td>
-    <td>
-      {{ item.full_name }}
-    </td>
-    <td>
-      {{ item.lab_number }}
-    </td>
-    <td>
-      {{ item.date }}
-    </td>
-  </tr>
-  </tbody>
-</table>
+<div class="container-fluid" id="labs">
+  <div class="row">
+    <div id="labs-right-panel" class="col-md-6 order-md-2 mb-6" v-if="showRightPanel">
+      <div id="labs-detail-container" class="sticky-top">
+        <div class="card">
+          <div class="card-body">
+            <div class="form-group row">
+              <label for="staticName" class="col-sm-4 col-form-label text-right font-weight-bold">Name:</label>
+              <div class="col-sm-6">
+                <input type="text" readonly class="form-control-plaintext" id="staticName" v-model="selectedItem['full_name']">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="staticLabNumber" class="col-sm-4 col-form-label text-right font-weight-bold">Lab number:</label>
+              <div class="col-sm-6">
+                <input type="text" readonly class="form-control-plaintext" id="staticLabNumber"
+                       v-model="selectedItem['lab_number']">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="staticReceived" class="col-sm-4 col-form-label text-right font-weight-bold">Received:</label>
+              <div class="col-sm-6">
+                <input type="text" readonly class="form-control-plaintext" id="staticReceived"
+                       v-model="selectedItem['date']">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="staticProcessed" class="col-sm-4 col-form-label text-right font-weight-bold">Lab number:</label>
+              <div class="col-sm-6">
+                <input type="text" readonly class="form-control-plaintext" id="staticProcessed"
+                       v-model="selectedItem['processed']">
+              </div>
+            </div>
+            <strong>Messages:</strong>
+            <div class="card mb-2" v-for="item in selectedItem['message_parts']">
+              <div class="card-body" v-html="item">
+              </div>
+            </div>
+            <strong>Git:</strong>
+            <div class="card text-white bg-primary mb-3" v-for="git in selectedItem['git_results']">
+              <div class="card-header">
+                <h5 class="card-title">{{git['status']}}</h5>
+              </div>
+              <div class="card-body">
+                <div class="container">
+                  <div class="row">
+                    <div class="col-4 text-right font-weight-bold">url:</div>
+                    <div class="col-8">{{git['url']}}</div>
+                  </div>
+                  <div v-if="git['status'] == 'ok'">
+                    <div class="row">
+                      <div class="col-4 text-right font-weight-bold">hash:</div>
+                      <div class="col-8">{{git['hash']}}</div>
+                    </div>
+                    <div class="row">
+                      <div class="col-4 text-right font-weight-bold">time:</div>
+                      <div class="col-8">{{git['time']}}</div>
+                    </div>
+
+                    <div class="row">
+                      <div class="col-4 text-right font-weight-bold">message:</div>
+                      <div class="col-8">{{git['message']}}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="labs-list"
+         v-bind:class="{ 'col-md-6': showRightPanel, 'col-md-12':  !showRightPanel, 'order-md-1': true }">
+      <table class="table">
+        <thead class="thead-dark">
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Name</th>
+          <th scope="col">Number</th>
+          <th scope="col">Date</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(item, index) in items" v-on:click.stop="showLab(index)"
+            v-bind:class="{ 'selected': index == selectedIndex}">
+          <td>
+            {{ index + 1 }}
+          </td>
+          <td>
+            {{ item.full_name }}
+          </td>
+          <td>
+            {{ item.lab_number }}
+          </td>
+          <td>
+            {{ item.date }}
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 <script>
     let labs_list = new Vue({
-        el: '#labs-list',
+        el: '#labs',
         data: {
-            items: <%= @labs.to_json %>
+            items: <%= @labs.to_json %>,
+            showRightPanel: false,
+            selectedItem: null,
+            selectedIndex: null
+        },
+        methods: {
+            showLab: function(index) {
+                this.showRightPanel = this.selectedIndex !== index;
+                if (this.showRightPanel) {
+                    this.selectedItem = this.items[index];
+                    this.selectedIndex = index;
+                } else {
+                    this.selectedItem = null;
+                    this.selectedIndex = null;
+                }
+                console.log(index)
+            }
         }
     })
 </script>
+<style>
+  #labs-list table tbody tr td {
+    cursor: pointer;
+  }
+  #labs-list {
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+  }
+
+  #labs-right-panel {
+    -webkit-animation: 0.6s ease 0s normal forwards 1 fadein;
+    -moz-animation: 0.6s ease 0s normal forwards 1 fadein;
+    -o-animation: 0.6s ease 0s normal forwards 1 fadein;
+    animation: 0.6s ease 0s normal forwards 1 fadein;
+  }
+
+
+  .table tr.selected td {
+    background-color: rgba(122, 122, 122, 0.48) !important;
+    color: white;
+  }
+
+  @keyframes fadein {
+    0% {
+      opacity: 0;
+    }
+    66% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @-webkit-keyframes fadein {
+    0% {
+      opacity: 0;
+    }
+    66% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+</style>
