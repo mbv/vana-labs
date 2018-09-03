@@ -1,0 +1,33 @@
+<table class="table" id="labs-list">
+  <thead class="thead-dark">
+  <tr>
+    <th scope="col"> #</th>
+    <th scope="col"> Name</th>
+    <th scope="col"> Number</th>
+    <th scope="col"> Date</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr v-for="item in items">
+    <td>
+    </td>
+    <td>
+      {{ item.full_name }}
+    </td>
+    <td>
+      {{ item.lab_number }}
+    </td>
+    <td>
+      {{ item.date }}
+    </td>
+  </tr>
+  </tbody>
+</table>
+<script>
+    let labs_list = new Vue({
+        el: '#labs-list',
+        data: {
+            items: <%= @labs.to_json %>
+        }
+    })
+</script>

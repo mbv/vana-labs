@@ -25,5 +25,5 @@ end
 get '/' do
   @labs = settings.mongo_db.find.to_a.sort_by { |lab| lab[:date] }
 
-  slim :index
+  erb :index
 end
