@@ -2,10 +2,9 @@ require 'sinatra'
 require 'mongo'
 require 'slim'
 require 'nokogiri'
-require 'tzinfo'
 
 configure do
-  db = Mongo::Client.new(['127.0.0.1:27017'], database: 'vana-labs')
+  db = Mongo::Client.new(['mongodb:27017'], database: 'vana-labs')
   set :mongo_db, db[:labs]
 end
 
