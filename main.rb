@@ -14,7 +14,7 @@ class EmailChecker
   end
 
   def start_check
-    config = YAML.safe_load(File.read('mail_receiver.yml'))
+    config = YAML.safe_load(File.read('../config/mail_receiver.yml'))
                  .each_with_object({}) { |(k, v), memo| memo[k.to_sym] = v; }
 
     sleep_time = config.delete(:sleep_time)
@@ -145,7 +145,7 @@ end
 
 class MongoPublisher
   def initialize
-    @client = Mongo::Client.new(['127.0.0.1:27017'], database: 'vana-labs')
+    @client = Mongo::Client.new(['mongodb:27017'], database: 'vana-labs')
   end
 
   def save(message)
