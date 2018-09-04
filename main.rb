@@ -71,10 +71,30 @@ class EmailMessage
         parts << message.body.decoded
       end
 
-      parts.each do |part|
-        Nokogiri::HTML(part).text.scan(regexp_git_links) do |match|
-          git_links << match[0]
+      text_version = nil
+      html_version = nil
+
+      if message.multipart?
+        if message.text_part
+          main_text = message.text_part.decoded
+        else
+          main_text = Nokogiri::HTML(message.html_part.decoded).text
         end
+
+        html_version = message.html_part.decoded
+        text_version = message.text_part.decoded
+      else
+        main_text = message.body.decoded
+        if message.main_type == 'text' && message.sub_type == 'html'
+          main_text    = Nokogiri::HTML(message.body.decoded).text
+          html_version = message.body.decoded
+        else
+          text_version = message.body.decoded
+        end
+      end
+
+      main_text.scan(regexp_git_links) do |match|
+        git_links << match[0]
       end
 
       git_links.uniq!
@@ -84,22 +104,24 @@ class EmailMessage
       end
 
       return {
-          status: :ok,
-          body:   {
-              full_name:     full_name,
-              lab_number:    lab_number,
-              message_parts: parts,
-              git_results:   git_results,
-              processed:     Time.now,
-              date:          message.date
+        status: :ok,
+        body:   {
+          full_name:     full_name,
+          lab_number:    lab_number,
+          message_parts: parts,
+          html_version:  html_version,
+          text_version:  text_version,
+          git_results:   git_results,
+          processed:     Time.now,
+          date:          message.date
 
-          }
+        }
       }
 
     end
 
     {
-        status: :error
+      status: :error
     }
   end
 end
@@ -113,32 +135,32 @@ class GitCheck
     rescue Rugged::NetworkError => e
       puts e
       return {
-          status: :error_clone,
-          url:    url
+        status: :error_clone,
+        url:    url
       }
     rescue Rugged::SshError => e
       puts e
       return {
-          status: :not_access,
-          url:    url
+        status: :not_access,
+        url:    url
       }
     end
 
 
     unless repo.branches.exist? 'master'
       return {
-          status: :not_master_branch,
-          url:    url
+        status: :not_master_branch,
+        url:    url
       }
     end
 
 
     {
-        status:  :ok,
-        url:     url,
-        hash:    repo.branches['master'].target_id,
-        time:    repo.branches['master'].target.time,
-        message: repo.branches['master'].target.message
+      status:  :ok,
+      url:     url,
+      hash:    repo.branches['master'].target_id,
+      time:    repo.branches['master'].target.time,
+      message: repo.branches['master'].target.message
     }
   end
 end
