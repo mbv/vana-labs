@@ -131,7 +131,10 @@ class GitCheck
     name = SecureRandom.hex(10)
     Dir.mkdir('/tmp/checkout') unless File.exist?(File.join('/tmp', 'checkout'))
     begin
-      repo = Rugged::Repository.clone_at(url, File.join('/tmp', 'checkout', name), depth: 1)
+      credentials = Rugged::Credentials::SshKeyFromAgent.new(username: 'git')
+      repo = Rugged::Repository.clone_at(url, File.join('/tmp', 'checkout', name),
+                                         depth: 1,
+                                         credentials: credentials)
     rescue Rugged::NetworkError => e
       puts e
       return {
