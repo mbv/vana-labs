@@ -75,11 +75,11 @@ class EmailMessage
       html_version = nil
 
       if message.multipart?
-        if message.text_part
-          main_text = message.text_part.decoded
-        else
-          main_text = Nokogiri::HTML(message.html_part.decoded).text
-        end
+        main_text = if message.text_part
+                      message.text_part.decoded
+                    else
+                      Nokogiri::HTML(message.html_part.decoded).text
+                    end
 
         html_version = message.html_part.decoded
         text_version = message.text_part.decoded
@@ -104,24 +104,25 @@ class EmailMessage
       end
 
       return {
-        status: :ok,
-        body:   {
-          full_name:     full_name,
-          lab_number:    lab_number,
-          message_parts: parts,
-          html_version:  html_version,
-          text_version:  text_version,
-          git_results:   git_results,
-          processed:     Time.now,
-          date:          message.date
+          status: :ok,
+          body:   {
+              full_name:     full_name,
+              lab_number:    lab_number,
+              message_parts: parts,
+              html_version:  html_version,
+              text_version:  text_version,
+              git_results:   git_results,
+              processed:     Time.now,
+              date:          message.date,
+              from:          message.from.join(", ¬")
 
-        }
+          }
       }
 
     end
 
     {
-      status: :error
+        status: :error
     }
   end
 end
@@ -131,39 +132,36 @@ class GitCheck
     name = SecureRandom.hex(10)
     Dir.mkdir('/tmp/checkout') unless File.exist?(File.join('/tmp', 'checkout'))
     begin
-      credentials = Rugged::Credentials::SshKeyFromAgent.new(username: 'git')
-      repo = Rugged::Repository.clone_at(url, File.join('/tmp', 'checkout', name),
-                                         depth: 1,
-                                         credentials: credentials)
+      repo = Rugged::Repository.clone_at(url, File.join('/tmp', 'checkout', name), depth: 1)
     rescue Rugged::NetworkError => e
       puts e
       return {
-        status: :error_clone,
-        url:    url
+          status: :error_clone,
+          url:    url
       }
     rescue Rugged::SshError => e
       puts e
       return {
-        status: :not_access,
-        url:    url
+          status: :not_access,
+          url:    url
       }
     end
 
 
     unless repo.branches.exist? 'master'
       return {
-        status: :not_master_branch,
-        url:    url
+          status: :not_master_branch,
+          url:    url
       }
     end
 
 
     {
-      status:  :ok,
-      url:     url,
-      hash:    repo.branches['master'].target_id,
-      time:    repo.branches['master'].target.time,
-      message: repo.branches['master'].target.message
+        status:  :ok,
+        url:     url,
+        hash:    repo.branches['master'].target_id,
+        time:    repo.branches['master'].target.time,
+        message: repo.branches['master'].target.message
     }
   end
 end
