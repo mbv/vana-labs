@@ -2,6 +2,7 @@ version: '3'
 services:
     labs-app:
         build: ./app
+        image: terehovk/vana-labs-app:latest
         container_name: "labs-app"
         volumes:
             - ./app/src:/usr/src/app:rw
@@ -12,6 +13,7 @@ services:
             - mongodb
     labs-web:
         build: ./web
+        image: terehovk/vana-labs-web:latest
         container_name: "labs-web"
         volumes:
             - ./web/src:/usr/src/app:rw
