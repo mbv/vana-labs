@@ -1,33 +1,67 @@
 <div class="container-fluid" id="labs">
   <div class="row">
+    <div id="labs-list"
+         v-bind:class="{ 'col-md-6': showRightPanel, 'col-md-12':  !showRightPanel, 'order-md-1': true }">
+      <table class="table">
+        <thead class="thead-dark">
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Name</th>
+          <th scope="col">Number</th>
+          <th scope="col">Date</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="(item, index) in items" v-on:click.stop="showLab(index)"
+            v-bind:class="{ 'selected': index == selectedIndex}">
+          <td>
+            {{ index + 1 }}
+          </td>
+          <td>
+            {{ item.full_name }}
+          </td>
+          <td>
+            {{ item.lab_number }}
+          </td>
+          <td>
+            {{ item.date }}
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
     <div id="labs-right-panel" class="col-md-6 order-md-2 mb-6" v-if="showRightPanel">
       <div id="labs-detail-container" class="sticky-top">
         <div class="card">
           <div class="card-body">
             <div class="form-group row">
-              <label for="staticName" class="col-sm-4 col-form-label text-right font-weight-bold">Name:</label>
+              <label for="staticName" class="col-sm-4 col-form-label text-sm-right font-weight-bold">Name:</label>
               <div class="col-sm-6">
                 <input type="text" readonly class="form-control-plaintext" id="staticName" v-model="selectedItem['full_name']">
               </div>
             </div>
             <div class="form-group row">
-              <label for="staticLabNumber" class="col-sm-4 col-form-label text-right font-weight-bold">Lab
-                number:</label>
+              <label for="staticFrom" class="col-sm-4 col-form-label text-sm-right font-weight-bold">From:</label>
+              <div class="col-sm-6">
+                <input type="text" readonly class="form-control-plaintext" id="staticFrom" v-model="selectedItem['from']">
+              </div>
+            </div>
+            <div class="form-group row">
+              <label for="staticLabNumber" class="col-sm-4 col-form-label text-sm-right font-weight-bold">Lab number:</label>
               <div class="col-sm-6">
                 <input type="text" readonly class="form-control-plaintext" id="staticLabNumber"
                        v-model="selectedItem['lab_number']">
               </div>
             </div>
             <div class="form-group row">
-              <label for="staticReceived" class="col-sm-4 col-form-label text-right font-weight-bold">Received:</label>
+              <label for="staticReceived" class="col-sm-4 col-form-label text-sm-right font-weight-bold">Received at:</label>
               <div class="col-sm-6">
                 <input type="text" readonly class="form-control-plaintext" id="staticReceived"
                        v-model="selectedItem['date']">
               </div>
             </div>
             <div class="form-group row">
-              <label for="staticProcessed" class="col-sm-4 col-form-label text-right font-weight-bold">Lab
-                number:</label>
+              <label for="staticProcessed" class="col-sm-4 col-form-label text-sm-right font-weight-bold">Processed at:</label>
               <div class="col-sm-6">
                 <input type="text" readonly class="form-control-plaintext" id="staticProcessed"
                        v-model="selectedItem['processed']">
@@ -102,36 +136,6 @@
           </div>
         </div>
       </div>
-    </div>
-    <div id="labs-list"
-         v-bind:class="{ 'col-md-6': showRightPanel, 'col-md-12':  !showRightPanel, 'order-md-1': true }">
-      <table class="table">
-        <thead class="thead-dark">
-        <tr>
-          <th scope="col">#</th>
-          <th scope="col">Name</th>
-          <th scope="col">Number</th>
-          <th scope="col">Date</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="(item, index) in items" v-on:click.stop="showLab(index)"
-            v-bind:class="{ 'selected': index == selectedIndex}">
-          <td>
-            {{ index + 1 }}
-          </td>
-          <td>
-            {{ item.full_name }}
-          </td>
-          <td>
-            {{ item.lab_number }}
-          </td>
-          <td>
-            {{ item.date }}
-          </td>
-        </tr>
-        </tbody>
-      </table>
     </div>
   </div>
 </div>
