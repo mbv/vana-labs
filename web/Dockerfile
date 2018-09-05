@@ -21,7 +21,7 @@ RUN apk add --no-cache \
 RUN gem install	sinatra nokogiri mongo slim
 
 ENV TZ=Europe/Minsk
-RUN apk add tzdata && cp /usr/share/zoneinfo/Europe/Minsk /etc/localtime && echo "Europe/Minsk" >  /etc/timezone && apk del tzdata
+RUN apk add tzdata && cp /usr/share/zoneinfo/Europe/Minsk /etc/localtime && echo "Europe/Minsk" > /etc/timezone
 
 WORKDIR /usr/src/app
 
