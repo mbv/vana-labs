@@ -3,4 +3,5 @@ source 'https://rubygems.org' do
   gem 'nokogiri'
   gem 'mongo'
   gem 'slim'
+  gem 'tzinfo'
 end
