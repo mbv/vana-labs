@@ -17,7 +17,7 @@ services:
             - ./web/src:/usr/src/app:rw
             - ./config:/usr/src/config
         ports:
-            - 8880:80
+            - 80:80
         links:
             - mongodb
         depends_on:

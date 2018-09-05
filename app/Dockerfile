@@ -30,6 +30,9 @@ RUN apk add --no-cache \
 #preinstall gems
 RUN gem install	mail rugged nokogiri mongo
 
+ENV TZ=Europe/Minsk
+RUN apk add tzdata && cp /usr/share/zoneinfo/Europe/Minsk /etc/localtime && echo "Europe/Minsk" >  /etc/timezone && apk del tzdata
+
 WORKDIR /usr/src/app
 
 EXPOSE 80
